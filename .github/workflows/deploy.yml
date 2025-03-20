@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Deploy to Amazon ECR
 
 on:
   push:
@@ -18,8 +18,22 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Ganti dengan region AWS kamu
+          aws-region: us-east-1
 
-      - name: Deploy to AWS
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create ECR repository (if not exists)
         run: |
-          echo "Deploying to AWS..."
+          aws ecr describe-repositories --repository-names my-app || aws ecr create-repository --repository-name my-app
+
+      - name: Build and Push Docker Image
+        run: |
+          ECR_REPOSITORY=my-app
+          IMAGE_TAG=latest
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_URI=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPOSITORY
+
+          docker build -t $ECR_URI:$IMAGE_TAG .
+          docker push $ECR_URI:$IMAGE_TAG
