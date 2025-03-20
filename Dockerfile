@@ -1,17 +1,6 @@
-# Gunakan image Node.js sebagai base
-FROM node:18-alpine 
-
-# Set direktori kerja dalam container
-WORKDIR /app 
-
-# Copy semua file ke dalam container
+FROM node:18
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
 COPY . .
-
-# Install dependensi
-RUN npm install 
-
-# Jalankan aplikasi
-CMD ["node", "index.js"]
-
-# Ekspose port aplikasi (sesuaikan dengan aplikasimu)
-EXPOSE 3000
+CMD ["node", "server.js"]
